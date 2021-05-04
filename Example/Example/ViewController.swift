@@ -38,6 +38,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         self.setupUI()
+        config.editImageClipRatios = [.wh16x9, .wh1x1, .wh2x3, .wh3x4]
     }
     
     func setupUI() {

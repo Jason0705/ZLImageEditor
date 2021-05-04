@@ -173,7 +173,7 @@ public class ZLEditImageViewController: UIViewController {
     }
     
     public override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return .portrait
+        return [.portrait, .landscape]
     }
     
     deinit {
@@ -249,7 +249,7 @@ public class ZLEditImageViewController: UIViewController {
         super.viewDidLoad()
         
         self.setupUI()
-        
+        self.setUpConstraints()
         self.rotationImageView()
         if self.tools.contains(.filter) {
             self.generateFilterImages()
@@ -258,49 +258,28 @@ public class ZLEditImageViewController: UIViewController {
     
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        guard self.shouldLayout else {
-            return
-        }
-        self.shouldLayout = false
         zl_debugPrint("edit image layout subviews")
-        var insets = UIEdgeInsets.zero
-        if #available(iOS 11.0, *) {
-            insets = self.view.safeAreaInsets
-        }
         
-        self.scrollView.frame = self.view.bounds
         self.resetContainerViewFrame()
         
-        self.topShadowView.frame = CGRect(x: 0, y: 0, width: self.view.frame.width, height: 150)
         self.topShadowLayer.frame = self.topShadowView.bounds
-        self.cancelBtn.frame = CGRect(x: 30, y: insets.top+10, width: 28, height: 28)
         
-        self.bottomShadowView.frame = CGRect(x: 0, y: self.view.frame.height-140-insets.bottom, width: self.view.frame.width, height: 140+insets.bottom)
         self.bottomShadowLayer.frame = self.bottomShadowView.bounds
-        
-        self.drawColorCollectionView.frame = CGRect(x: 20, y: 20, width: self.view.frame.width - 80, height: 50)
-        self.revokeBtn.frame = CGRect(x: self.view.frame.width - 15 - 35, y: 30, width: 35, height: 30)
-        
-        self.filterCollectionView.frame = CGRect(x: 20, y: 0, width: self.view.frame.width-40, height: ZLEditImageViewController.filterColViewH)
-        
-        let toolY: CGFloat = 85
-        
-        let doneBtnH = ZLImageEditorLayout.bottomToolBtnH
-        let doneBtnW = localLanguageTextValue(.editFinish).boundingRect(font: ZLImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: doneBtnH)).width + 20
-        self.doneBtn.frame = CGRect(x: self.view.frame.width-20-doneBtnW, y: toolY-2, width: doneBtnW, height: doneBtnH)
-        
-        self.editToolCollectionView.frame = CGRect(x: 20, y: toolY, width: self.view.bounds.width - 20 - 20 - doneBtnW - 20, height: 30)
-        
-        if !self.drawPaths.isEmpty {
-            self.drawLine()
-        }
-        if !self.mosaicPaths.isEmpty {
-            self.generateNewMosaicImage()
-        }
         
         if let index = self.drawColors.firstIndex(where: { $0 == self.currentDrawColor}) {
             self.drawColorCollectionView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
         }
+        
+        if shouldLayout {
+            if !self.drawPaths.isEmpty {
+                self.drawLine()
+            }
+            if !self.mosaicPaths.isEmpty {
+                self.generateNewMosaicImage()
+            }
+        }
+        
+        self.shouldLayout = false
     }
     
     func generateFilterImages() {
@@ -332,7 +311,6 @@ public class ZLEditImageViewController: UIViewController {
     }
     
     func resetContainerViewFrame() {
-        self.scrollView.setZoomScale(1, animated: true)
         self.imageView.image = self.editImage
         
         let editSize = self.editRect.size
@@ -362,6 +340,72 @@ public class ZLEditImageViewController: UIViewController {
         
         self.originalFrame = self.view.convert(self.containerView.frame, from: self.scrollView)
         self.isScrolling = false
+        self.scrollView.setZoomScale(1, animated: true)
+    }
+    
+    func setUpConstraints() {
+        self.scrollView.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        self.scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        self.scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        self.scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        
+        self.topShadowView.translatesAutoresizingMaskIntoConstraints = false
+        self.topShadowView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        self.topShadowView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        self.topShadowView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        self.topShadowView.bottomAnchor.constraint(equalTo: self.cancelBtn.bottomAnchor, constant: 10).isActive = true
+        
+        self.cancelBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.cancelBtn.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor, constant: 10).isActive = true
+        self.cancelBtn.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor).isActive = true
+        self.cancelBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        self.cancelBtn.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        self.bottomShadowView.translatesAutoresizingMaskIntoConstraints = false
+        self.bottomShadowView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        self.bottomShadowView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        self.bottomShadowView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        self.bottomShadowView.topAnchor.constraint(equalTo: self.filterCollectionView.topAnchor, constant: -10).isActive = true
+        
+        self.editToolCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        self.editToolCollectionView.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -10).isActive = true
+        self.editToolCollectionView.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor).isActive = true
+        self.editToolCollectionView.trailingAnchor.constraint(equalTo: self.doneBtn.leadingAnchor, constant: -10).isActive = true
+        self.editToolCollectionView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        
+        let doneBtnH = ZLImageEditorLayout.bottomToolBtnH
+        let doneBtnW = localLanguageTextValue(.editFinish).boundingRect(font: ZLImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: doneBtnH)).width + 20
+        self.doneBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.doneBtn.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -10).isActive = true
+        self.doneBtn.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor).isActive = true
+        self.doneBtn.widthAnchor.constraint(equalToConstant: doneBtnW).isActive = true
+        self.doneBtn.heightAnchor.constraint(equalToConstant: doneBtnH).isActive = true
+        
+        self.drawColorCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        self.drawColorCollectionView.bottomAnchor.constraint(equalTo: self.editToolCollectionView.topAnchor, constant: -10).isActive = true
+        self.drawColorCollectionView.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor).isActive = true
+        self.drawColorCollectionView.trailingAnchor.constraint(equalTo: self.revokeBtn.leadingAnchor, constant: -10).isActive = true
+        self.drawColorCollectionView.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        self.filterCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        self.filterCollectionView.bottomAnchor.constraint(equalTo: self.editToolCollectionView.topAnchor, constant: -10).isActive = true
+        self.filterCollectionView.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor).isActive = true
+        self.filterCollectionView.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor).isActive = true
+        self.filterCollectionView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        
+        self.revokeBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.revokeBtn.centerYAnchor.constraint(equalTo: self.drawColorCollectionView.centerYAnchor).isActive = true
+        self.revokeBtn.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor).isActive = true
+        self.revokeBtn.widthAnchor.constraint(equalToConstant: 35).isActive = true
+        self.revokeBtn.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        
+        self.ashbinView.translatesAutoresizingMaskIntoConstraints = false
+        self.ashbinView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+        self.ashbinView.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -10).isActive = true
+        self.ashbinView.widthAnchor.constraint(equalToConstant: 160).isActive = true
+        self.ashbinView.heightAnchor.constraint(equalToConstant: 80).isActive = true
     }
     
     func setupUI() {
@@ -372,6 +416,8 @@ public class ZLEditImageViewController: UIViewController {
         self.scrollView.minimumZoomScale = 1
         self.scrollView.maximumZoomScale = 3
         self.scrollView.delegate = self
+        self.scrollView.showsVerticalScrollIndicator = false
+        self.scrollView.showsHorizontalScrollIndicator = false
         self.view.addSubview(self.scrollView)
         
         self.containerView = UIView()
@@ -481,7 +527,7 @@ public class ZLEditImageViewController: UIViewController {
         self.bottomShadowView.addSubview(self.revokeBtn)
         
         let ashbinSize = CGSize(width: 160, height: 80)
-        self.ashbinView = UIView(frame: CGRect(x: (self.view.frame.width-ashbinSize.width)/2, y: self.view.frame.height-ashbinSize.height-40, width: ashbinSize.width, height: ashbinSize.height))
+        self.ashbinView = UIView(frame: CGRect(origin: .zero, size: ashbinSize))
         self.ashbinView.backgroundColor = ZLEditImageViewController.ashbinNormalBgColor
         self.ashbinView.layer.cornerRadius = 15
         self.ashbinView.layer.masksToBounds = true

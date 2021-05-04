@@ -145,7 +145,7 @@ class ZLClipImageViewController: UIViewController {
     }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return .portrait
+        return [.portrait, .landscape]
     }
     
     deinit {
@@ -188,6 +188,7 @@ class ZLClipImageViewController: UIViewController {
         super.viewDidLoad()
         
         self.setupUI()
+        self.setUpConstraints()
         self.generateThumbnailImage()
     }
     
@@ -234,35 +235,94 @@ class ZLClipImageViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        guard self.shouldLayout else {
-            return
-        }
-        self.shouldLayout = false
+//        guard self.shouldLayout else {
+//            return
+//        }
+//        self.shouldLayout = false
         
-        self.scrollView.frame = self.view.bounds
-        self.shadowView.frame = self.view.bounds
+//        self.scrollView.frame = self.view.bounds
+//        self.shadowView.frame = self.view.bounds
         
         self.layoutInitialImage()
         
-        self.bottomToolView.frame = CGRect(x: 0, y: self.view.bounds.height-ZLClipImageViewController.bottomToolViewH, width: self.view.bounds.width, height: ZLClipImageViewController.bottomToolViewH)
+//        self.bottomToolView.frame = CGRect(x: 0, y: self.view.bounds.height-ZLClipImageViewController.bottomToolViewH, width: self.view.bounds.width, height: ZLClipImageViewController.bottomToolViewH)
         self.bottomShadowLayer.frame = self.bottomToolView.bounds
         
-        self.bottomToolLineView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.width, height: 1/UIScreen.main.scale)
-        let toolBtnH: CGFloat = 25
-        let toolBtnY = (ZLClipImageViewController.bottomToolViewH - toolBtnH) / 2 - 10
-        self.cancelBtn.frame = CGRect(x: 30, y: toolBtnY, width: toolBtnH, height: toolBtnH)
-        let revertBtnW = localLanguageTextValue(.revert).boundingRect(font: ZLImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
-        self.revertBtn.frame = CGRect(x: (self.view.bounds.width-revertBtnW)/2, y: toolBtnY, width: revertBtnW, height: toolBtnH)
-        self.doneBtn.frame = CGRect(x: self.view.bounds.width-30-toolBtnH, y: toolBtnY, width: toolBtnH, height: toolBtnH)
+//        self.bottomToolLineView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.width, height: 1/UIScreen.main.scale)
+//        let toolBtnH: CGFloat = 25
+//        let toolBtnY = (ZLClipImageViewController.bottomToolViewH - toolBtnH) / 2 - 10
+//        self.cancelBtn.frame = CGRect(x: 30, y: toolBtnY, width: toolBtnH, height: toolBtnH)
+//        let revertBtnW = localLanguageTextValue(.revert).boundingRect(font: ZLImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
+//        self.revertBtn.frame = CGRect(x: (self.view.bounds.width-revertBtnW)/2, y: toolBtnY, width: revertBtnW, height: toolBtnH)
+//        self.doneBtn.frame = CGRect(x: self.view.bounds.width-30-toolBtnH, y: toolBtnY, width: toolBtnH, height: toolBtnH)
         
-        let ratioColViewY = self.bottomToolView.frame.minY - ZLClipImageViewController.clipRatioItemSize.height - 5
-        self.rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (ZLClipImageViewController.clipRatioItemSize.height-25)/2, width: 25, height: 25)
-        let ratioColViewX = self.rotateBtn.frame.maxX + 15
-        self.clipRatioColView.frame = CGRect(x: ratioColViewX, y: ratioColViewY, width: self.view.bounds.width - ratioColViewX, height: 70)
+//        let ratioColViewY = self.bottomToolView.frame.minY - ZLClipImageViewController.clipRatioItemSize.height - 5
+//        self.rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (ZLClipImageViewController.clipRatioItemSize.height-25)/2, width: 25, height: 25)
+//        let ratioColViewX = self.rotateBtn.frame.maxX + 15
+//        self.clipRatioColView.frame = CGRect(x: ratioColViewX, y: ratioColViewY, width: self.view.bounds.width - ratioColViewX, height: 70)
         
         if self.clipRatios.count > 1, let index = self.clipRatios.firstIndex(where: { $0 == self.selectedRatio}) {
             self.clipRatioColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
         }
+    }
+    
+    func setUpConstraints() {
+        self.scrollView.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        self.scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        self.scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        self.scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+
+        self.shadowView.translatesAutoresizingMaskIntoConstraints = false
+        self.shadowView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        self.shadowView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        self.shadowView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        self.shadowView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        
+        let toolBtnH: CGFloat = 30
+        
+        self.bottomToolView.translatesAutoresizingMaskIntoConstraints = false
+        self.bottomToolView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        self.bottomToolView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        self.bottomToolView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        self.bottomToolView.topAnchor.constraint(equalTo: self.revertBtn.topAnchor, constant: -10).isActive = true
+
+        self.bottomToolLineView.translatesAutoresizingMaskIntoConstraints = false
+        self.bottomToolLineView.topAnchor.constraint(equalTo: self.bottomToolView.topAnchor).isActive = true
+        self.bottomToolLineView.leadingAnchor.constraint(equalTo: self.bottomToolView.leadingAnchor).isActive = true
+        self.bottomToolLineView.trailingAnchor.constraint(equalTo: self.bottomToolView.trailingAnchor).isActive = true
+        self.bottomToolLineView.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        
+        self.cancelBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.cancelBtn.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -10).isActive = true
+        self.cancelBtn.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor, constant: 20).isActive = true
+        self.cancelBtn.widthAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+        self.cancelBtn.heightAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+
+        let revertBtnW = localLanguageTextValue(.revert).boundingRect(font: ZLImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
+        self.revertBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.revertBtn.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -10).isActive = true
+        self.revertBtn.centerXAnchor.constraint(equalTo: self.bottomToolView.centerXAnchor).isActive = true
+        self.revertBtn.widthAnchor.constraint(equalToConstant: revertBtnW).isActive = true
+        self.revertBtn.heightAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+
+        self.doneBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.doneBtn.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -10).isActive = true
+        self.doneBtn.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor, constant: -20).isActive = true
+        self.doneBtn.widthAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+        self.doneBtn.heightAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+        
+        self.rotateBtn.translatesAutoresizingMaskIntoConstraints = false
+        self.rotateBtn.centerYAnchor.constraint(equalTo: self.clipRatioColView.centerYAnchor).isActive = true
+        self.rotateBtn.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor, constant: 20).isActive = true
+        self.rotateBtn.widthAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+        self.rotateBtn.heightAnchor.constraint(equalToConstant: toolBtnH).isActive = true
+
+        self.clipRatioColView.translatesAutoresizingMaskIntoConstraints = false
+        self.clipRatioColView.bottomAnchor.constraint(equalTo: self.bottomToolLineView.topAnchor, constant: -10).isActive = true
+        self.clipRatioColView.leadingAnchor.constraint(equalTo: self.rotateBtn.trailingAnchor, constant: 15).isActive = true
+        self.clipRatioColView.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor, constant: -20).isActive = true
+        self.clipRatioColView.heightAnchor.constraint(equalToConstant: 70).isActive = true
     }
     
     func setupUI() {
