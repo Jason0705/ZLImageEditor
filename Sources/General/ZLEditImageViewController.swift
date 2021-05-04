@@ -857,7 +857,7 @@ public class ZLEditImageViewController: UIViewController {
             completion(text, textColor, bgColor)
         }
         
-        vc.modalPresentationStyle = .fullScreen
+        vc.modalPresentationStyle = .overCurrentContext
         self.showDetailViewController(vc, sender: nil)
     }
     
