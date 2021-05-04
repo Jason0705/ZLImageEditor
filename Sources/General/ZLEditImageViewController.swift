@@ -293,7 +293,9 @@ public class ZLEditImageViewController: UIViewController {
         let orientation = UIApplication.shared.statusBarOrientation
         if orientation != lastOrientation {
             lastOrientation = orientation
-            self.resetContainerViewFrame()
+            DispatchQueue.main.asyncAfter(deadline: .now()) {
+                self.resetContainerViewFrame()
+            }
         }
     }
     
@@ -327,7 +329,7 @@ public class ZLEditImageViewController: UIViewController {
     
     func resetContainerViewFrame() {
         self.imageView.image = self.editImage
-        
+        self.scrollView.setZoomScale(1, animated: true)
         let editSize = self.editRect.size
         let scrollViewSize = self.scrollView.frame.size
         let ratio = min(scrollViewSize.width / editSize.width, scrollViewSize.height / editSize.height)
