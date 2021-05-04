@@ -166,6 +166,8 @@ public class ZLEditImageViewController: UIViewController {
         return self.originalImage.size
     }
     
+    private var lastOrientation = UIApplication.shared.statusBarOrientation
+    
     @objc public var editFinishBlock: ( (UIImage, ZLEditImageModel) -> Void )?
     
     public override var prefersStatusBarHidden: Bool {
@@ -178,6 +180,7 @@ public class ZLEditImageViewController: UIViewController {
     
     deinit {
         zl_debugPrint("ZLEditImageViewController deinit")
+        NotificationCenter.default.removeObserver(self)
     }
     
     @objc public class func showEditImageVC(parentVC: UIViewController?, animate: Bool = true, image: UIImage, editModel: ZLEditImageModel? = nil, completion: ( (UIImage, ZLEditImageModel) -> Void )? ) {
@@ -247,7 +250,7 @@ public class ZLEditImageViewController: UIViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        
+        self.configureNotification()
         self.setupUI()
         self.setUpConstraints()
         self.rotationImageView()
@@ -260,8 +263,6 @@ public class ZLEditImageViewController: UIViewController {
         super.viewDidLayoutSubviews()
         zl_debugPrint("edit image layout subviews")
         
-        self.resetContainerViewFrame()
-        
         self.topShadowLayer.frame = self.topShadowView.bounds
         
         self.bottomShadowLayer.frame = self.bottomShadowView.bounds
@@ -271,6 +272,8 @@ public class ZLEditImageViewController: UIViewController {
         }
         
         if shouldLayout {
+            self.resetContainerViewFrame()
+            
             if !self.drawPaths.isEmpty {
                 self.drawLine()
             }
@@ -280,6 +283,18 @@ public class ZLEditImageViewController: UIViewController {
         }
         
         self.shouldLayout = false
+    }
+    
+    private func configureNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationChanged), name: UIDevice.orientationDidChangeNotification, object: nil)
+    }
+    
+    @objc private func deviceOrientationChanged() {
+        let orientation = UIApplication.shared.statusBarOrientation
+        if orientation != lastOrientation {
+            lastOrientation = orientation
+            self.resetContainerViewFrame()
+        }
     }
     
     func generateFilterImages() {
@@ -319,9 +334,11 @@ public class ZLEditImageViewController: UIViewController {
         let w = ratio * editSize.width * self.scrollView.zoomScale
         let h = ratio * editSize.height * self.scrollView.zoomScale
         self.containerView.frame = CGRect(x: max(0, (scrollViewSize.width-w)/2), y: max(0, (scrollViewSize.height-h)/2), width: w, height: h)
-        
+
         let scaleImageOrigin = CGPoint(x: -self.editRect.origin.x*ratio, y: -self.editRect.origin.y*ratio)
         let scaleImageSize = CGSize(width: self.imageSize.width * ratio, height: self.imageSize.height * ratio)
+        
+        self.scrollView.contentSize = scaleImageSize
         self.imageView.frame = CGRect(origin: scaleImageOrigin, size: scaleImageSize)
         self.mosaicImageLayer?.frame = self.imageView.bounds
         self.mosaicImageLayerMaskLayer?.frame = self.imageView.bounds
@@ -1234,7 +1251,7 @@ extension ZLEditImageViewController: ZLTextStickerViewDelegate {
     
     func stickerOnOperation(_ sticker: UIView, panGes: UIPanGestureRecognizer) {
         let point = panGes.location(in: self.view)
-        if self.ashbinView.frame.contains(point) {
+        if self.ashbinView.frame.contains(point) || !self.containerView.frame.contains(point) {
             self.ashbinView.backgroundColor = zlRGB(241, 79, 79).withAlphaComponent(0.98)
             self.ashbinImgView.isHighlighted = true
             if sticker.alpha == 1 {
@@ -1261,7 +1278,7 @@ extension ZLEditImageViewController: ZLTextStickerViewDelegate {
         self.ashbinView.isHidden = true
         
         let point = panGes.location(in: self.view)
-        if self.ashbinView.frame.contains(point) {
+        if self.ashbinView.frame.contains(point) || !self.containerView.frame.contains(point) {
             (sticker as? ZLStickerViewAdditional)?.moveToAshbin()
         }
         
