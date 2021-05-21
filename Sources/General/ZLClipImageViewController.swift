@@ -116,16 +116,20 @@ class ZLClipImageViewController: UIViewController {
     
     var thumbnailImage: UIImage?
     
-    lazy var maxClipFrame: CGRect = {
-        var insets = deviceSafeAreaInsets()
-        insets.top +=  20
-        var rect = CGRect.zero
-        rect.origin.x = 15
-        rect.origin.y = insets.top
-        rect.size.width = UIScreen.main.bounds.width - 15 * 2
-        rect.size.height = UIScreen.main.bounds.height - insets.top - ZLClipImageViewController.bottomToolViewH - ZLClipImageViewController.clipRatioItemSize.height - 25
-        return rect
-    }()
+    var maxClipView: UIView!
+    
+//    lazy var maxClipFrame: CGRect = {
+////        var insets = deviceSafeAreaInsets()
+////        insets.top +=  20
+////        var rect = CGRect.zero
+////        rect.origin.x = 15
+////        rect.origin.y = insets.top
+////        rect.size.width = UIScreen.main.bounds.width - 15 * 2
+////        rect.size.height = UIScreen.main.bounds.height - insets.top - ZLClipImageViewController.bottomToolViewH - ZLClipImageViewController.clipRatioItemSize.height - 25
+////        return rect
+//        self.view.layoutIfNeeded()
+//        return maxClipView.frame
+//    }()
     
     var minClipSize = CGSize(width: 45, height: 45)
     
@@ -235,10 +239,16 @@ class ZLClipImageViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-//        guard self.shouldLayout else {
-//            return
-//        }
-//        self.shouldLayout = false
+        self.bottomShadowLayer.frame = self.bottomToolView.bounds
+        
+        if self.clipRatios.count > 1, let index = self.clipRatios.firstIndex(where: { $0 == self.selectedRatio}) {
+            self.clipRatioColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
+        }
+        
+        guard self.shouldLayout else {
+            return
+        }
+        self.shouldLayout = false
         
 //        self.scrollView.frame = self.view.bounds
 //        self.shadowView.frame = self.view.bounds
@@ -246,7 +256,7 @@ class ZLClipImageViewController: UIViewController {
         self.layoutInitialImage()
         
 //        self.bottomToolView.frame = CGRect(x: 0, y: self.view.bounds.height-ZLClipImageViewController.bottomToolViewH, width: self.view.bounds.width, height: ZLClipImageViewController.bottomToolViewH)
-        self.bottomShadowLayer.frame = self.bottomToolView.bounds
+//        self.bottomShadowLayer.frame = self.bottomToolView.bounds
         
 //        self.bottomToolLineView.frame = CGRect(x: 0, y: 0, width: self.view.bounds.width, height: 1/UIScreen.main.scale)
 //        let toolBtnH: CGFloat = 25
@@ -261,12 +271,27 @@ class ZLClipImageViewController: UIViewController {
 //        let ratioColViewX = self.rotateBtn.frame.maxX + 15
 //        self.clipRatioColView.frame = CGRect(x: ratioColViewX, y: ratioColViewY, width: self.view.bounds.width - ratioColViewX, height: 70)
         
-        if self.clipRatios.count > 1, let index = self.clipRatios.firstIndex(where: { $0 == self.selectedRatio}) {
-            self.clipRatioColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
-        }
+//        if self.clipRatios.count > 1, let index = self.clipRatios.firstIndex(where: { $0 == self.selectedRatio}) {
+//            self.clipRatioColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
+//        }
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        // Have the collection view re-layout its cells.
+        coordinator.animate(alongsideTransition: { (_) in
+            self.layoutInitialImage()
+        }, completion: nil)
     }
     
     func setUpConstraints() {
+        self.maxClipView.translatesAutoresizingMaskIntoConstraints = false
+        self.maxClipView.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor, constant: 10).isActive = true
+        self.maxClipView.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor).isActive = true
+        self.maxClipView.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor).isActive = true
+        self.maxClipView.bottomAnchor.constraint(equalTo: self.clipRatioColView.topAnchor, constant:  -10).isActive = true
+        
         self.scrollView.translatesAutoresizingMaskIntoConstraints = false
         self.scrollView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
         self.scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
@@ -327,6 +352,10 @@ class ZLClipImageViewController: UIViewController {
     
     func setupUI() {
         self.view.backgroundColor = .black
+        
+        self.maxClipView = UIView()
+        self.maxClipView.backgroundColor = .clear
+        self.view.addSubview(self.maxClipView)
         
         self.scrollView = UIScrollView()
         self.scrollView.alwaysBounceVertical = true
@@ -465,7 +494,7 @@ class ZLClipImageViewController: UIViewController {
         
         let editSize = self.editRect.size
         self.scrollView.contentSize = editSize
-        let maxClipRect = self.maxClipFrame
+        let maxClipRect = self.maxClipView.frame
         
         self.containerView.frame = CGRect(origin: .zero, size: self.editImage.size)
         self.imageView.frame = self.containerView.bounds
@@ -516,25 +545,25 @@ class ZLClipImageViewController: UIViewController {
             return
         }
         var frame = newFrame
-        let originX = ceil(self.maxClipFrame.minX)
+        let originX = ceil(self.maxClipView.frame.minX)
         let diffX = frame.minX - originX
         frame.origin.x = max(frame.minX, originX)
 //        frame.origin.x = floor(max(frame.minX, originX))
         if diffX < -CGFloat.ulpOfOne {
             frame.size.width += diffX
         }
-        let originY = ceil(self.maxClipFrame.minY)
+        let originY = ceil(self.maxClipView.frame.minY)
         let diffY = frame.minY - originY
         frame.origin.y = max(frame.minY, originY)
 //        frame.origin.y = floor(max(frame.minY, originY))
         if diffY < -CGFloat.ulpOfOne {
             frame.size.height += diffY
         }
-        let maxW = self.maxClipFrame.width + self.maxClipFrame.minX - frame.minX
+        let maxW = self.maxClipView.frame.width + self.maxClipView.frame.minX - frame.minX
         frame.size.width = max(self.minClipSize.width, min(frame.width, maxW))
 //        frame.size.width = floor(max(self.minClipSize.width, min(frame.width, maxW)))
         
-        let maxH = self.maxClipFrame.height + self.maxClipFrame.minY - frame.minY
+        let maxH = self.maxClipView.frame.height + self.maxClipView.frame.minY - frame.minY
         frame.size.height = max(self.minClipSize.height, min(frame.height, maxH))
 //        frame.size.height = floor(max(self.minClipSize.height, min(frame.height, maxH)))
         
@@ -707,8 +736,8 @@ class ZLClipImageViewController: UIViewController {
         let originFrame = self.clipOriginFrame
         
         var newPoint = point
-        newPoint.x = max(self.maxClipFrame.minX, newPoint.x)
-        newPoint.y = max(self.maxClipFrame.minY, newPoint.y)
+        newPoint.x = max(self.maxClipView.frame.minX, newPoint.x)
+        newPoint.y = max(self.maxClipView.frame.minY, newPoint.y)
         
         let diffX = ceil(newPoint.x - self.beginPanPoint.x)
         let diffY = ceil(newPoint.y - self.beginPanPoint.y)
@@ -822,16 +851,16 @@ class ZLClipImageViewController: UIViewController {
             } else {
                 minSize = CGSize(width: self.minClipSize.width, height: self.minClipSize.width / ratio)
             }
-            if ratio > self.maxClipFrame.width / self.maxClipFrame.height {
-                maxSize = CGSize(width: self.maxClipFrame.width, height: self.maxClipFrame.width / ratio)
+            if ratio > self.maxClipView.frame.width / self.maxClipView.frame.height {
+                maxSize = CGSize(width: self.maxClipView.frame.width, height: self.maxClipView.frame.width / ratio)
             } else {
-                maxSize = CGSize(width: self.maxClipFrame.height * ratio, height: self.maxClipFrame.height)
+                maxSize = CGSize(width: self.maxClipView.frame.height * ratio, height: self.maxClipView.frame.height)
             }
-            maxClipFrame = CGRect(origin: CGPoint(x: self.maxClipFrame.minX + (self.maxClipFrame.width-maxSize.width)/2, y: self.maxClipFrame.minY + (self.maxClipFrame.height-maxSize.height)/2), size: maxSize)
+            maxClipFrame = CGRect(origin: CGPoint(x: self.maxClipView.frame.minX + (self.maxClipView.frame.width-maxSize.width)/2, y: self.maxClipView.frame.minY + (self.maxClipView.frame.height-maxSize.height)/2), size: maxSize)
         } else {
             minSize = self.minClipSize
-            maxSize = self.maxClipFrame.size
-            maxClipFrame = self.maxClipFrame
+            maxSize = self.maxClipView.frame.size
+            maxClipFrame = self.maxClipView.frame
         }
         
         frame.size.width = min(maxSize.width, max(minSize.width, frame.size.width))
@@ -878,7 +907,7 @@ class ZLClipImageViewController: UIViewController {
     }
     
     func moveClipContentToCenter() {
-        let maxClipRect = self.maxClipFrame
+        let maxClipRect = self.maxClipView.frame
         var clipRect = self.clipBoxFrame
         
         if clipRect.width < CGFloat.ulpOfOne || clipRect.height < CGFloat.ulpOfOne {
