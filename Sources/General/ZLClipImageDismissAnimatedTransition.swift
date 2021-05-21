@@ -39,6 +39,10 @@ class ZLClipImageDismissAnimatedTransition: NSObject, UIViewControllerAnimatedTr
         }
         
         let containerView = transitionContext.containerView
+        toVC.view.frame = containerView.frame
+        toVC.shouldLayout = true
+        toVC.view.setNeedsLayout()
+        toVC.view.layoutIfNeeded()
         containerView.addSubview(toVC.view)
         
         let imageView = UIImageView(frame: fromVC.dismissAnimateFromRect)

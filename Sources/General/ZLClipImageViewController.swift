@@ -585,6 +585,7 @@ class ZLClipImageViewController: UIViewController {
     }
     
     @objc func cancelBtnClick() {
+        self.cancelClipAnimateFrame = self.clipBoxFrame
         self.dismissAnimateFromRect = self.cancelClipAnimateFrame
         self.dismissAnimateImage = self.presentAnimateImage
         self.cancelClipBlock?()
