@@ -48,7 +48,8 @@ class ZLClipImageDismissAnimatedTransition: NSObject, UIViewControllerAnimatedTr
         containerView.addSubview(imageView)
         
         UIView.animate(withDuration: 0.3, animations: {
-            imageView.frame = toVC.originalFrame
+            let frame = toVC.scrollView.convert(toVC.containerView.frame, to: toVC.view)
+            imageView.frame = frame
         }) { (_) in
             toVC.finishClipDismissAnimate()
             imageView.removeFromSuperview()
