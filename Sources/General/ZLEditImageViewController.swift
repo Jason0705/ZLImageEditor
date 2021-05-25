@@ -272,6 +272,7 @@ public class ZLEditImageViewController: UIViewController {
         }
         
         if shouldLayout {
+            
             self.resetContainerViewFrame()
             
             if !self.drawPaths.isEmpty {
@@ -294,10 +295,9 @@ public class ZLEditImageViewController: UIViewController {
         if orientation != lastOrientation {
             lastOrientation = orientation
             DispatchQueue.main.asyncAfter(deadline: .now()) {
-                let oldAngle = self.angle
                 let oldContainerSize = self.stickersContainer.frame.size
                 self.resetContainerViewFrame()
-                self.reCalculateStickersFrame(oldContainerSize, oldAngle, oldAngle)
+                self.reScaleStickersFrame(oldContainerSize: oldContainerSize)
             }
         }
     }
@@ -930,6 +930,14 @@ public class ZLEditImageViewController: UIViewController {
             scale = currSize.height / oldSize.width
         }
         
+        self.stickersContainer.subviews.forEach { (view) in
+            (view as? ZLStickerViewAdditional)?.addScale(scale)
+        }
+    }
+    
+    func reScaleStickersFrame(oldContainerSize: CGSize) {
+        let currSize = self.stickersContainer.frame.size
+        let scale = currSize.width / oldContainerSize.width
         self.stickersContainer.subviews.forEach { (view) in
             (view as? ZLStickerViewAdditional)?.addScale(scale)
         }
