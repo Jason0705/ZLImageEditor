@@ -278,8 +278,6 @@ class ZLClipImageViewController: UIViewController {
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
-
-        // Have the collection view re-layout its cells.
         coordinator.animate(alongsideTransition: { (_) in
             self.layoutInitialImage()
         }, completion: nil)

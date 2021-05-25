@@ -294,7 +294,10 @@ public class ZLEditImageViewController: UIViewController {
         if orientation != lastOrientation {
             lastOrientation = orientation
             DispatchQueue.main.asyncAfter(deadline: .now()) {
+                let oldAngle = self.angle
+                let oldContainerSize = self.stickersContainer.frame.size
                 self.resetContainerViewFrame()
+                self.reCalculateStickersFrame(oldContainerSize, oldAngle, oldAngle)
             }
         }
     }
