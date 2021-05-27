@@ -183,7 +183,7 @@ public class ZLEditImageViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc public class func showEditImageVC(parentVC: UIViewController?, animate: Bool = true, image: UIImage, editModel: ZLEditImageModel? = nil, completion: ( (UIImage, ZLEditImageModel) -> Void )? ) {
+    @objc public class func showEditImageVC(parentVC: UIViewController?, animate: Bool = true, image: UIImage, editModel: ZLEditImageModel? = nil, completion: ( (UIImage, ZLEditImageModel?) -> Void )? ) {
         let tools = ZLImageEditorConfiguration.default().editImageTools
         if ZLImageEditorConfiguration.default().showClipDirectlyIfOnlyHasClipTool, tools.count == 1, tools.contains(.clip) {
             let vc = ZLClipImageViewController(image: image, editRect: editModel?.editRect, angle: editModel?.angle ?? 0, selectRatio: editModel?.selectRatio)
@@ -197,7 +197,11 @@ public class ZLEditImageViewController: UIViewController {
         } else {
             let vc = ZLEditImageViewController(image: image, editModel: editModel)
             vc.editFinishBlock = {  (ei, editImageModel) in
-                completion?(ei, editImageModel)
+                if editImageModel.angle == 0 && editImageModel.drawPaths.isEmpty && editImageModel.editRect == CGRect(origin: .zero, size: image.size) && editImageModel.mosaicPaths.isEmpty && editImageModel.selectRatio == nil, editImageModel.textStickers?.count == 0 && editImageModel.imageStickers?.count == 0 && editImageModel.selectFilter == ZLFilter.normal {
+                    completion?(ei, nil)
+                } else {
+                    completion?(ei, editImageModel)
+                }
             }
             vc.animateDismiss = animate
             vc.modalPresentationStyle = .fullScreen
