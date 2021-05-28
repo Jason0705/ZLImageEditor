@@ -247,11 +247,44 @@ class ViewController: UIViewController {
         }
     }
     
+    func getData(from editModel: ZLEditImageModel) -> Data? {
+        if #available(iOS 11.0, *) {
+            do {
+                let data = try NSKeyedArchiver.archivedData(withRootObject: editModel, requiringSecureCoding: false)
+                return data
+            } catch (let error) {
+                debugPrint("encode error: \(error)")
+                return nil
+            }
+        } else {
+            let data = NSKeyedArchiver.archivedData(withRootObject: editModel)
+            return data
+        }
+    }
+    
+    func getEditModel(from data: Data) -> ZLEditImageModel? {
+        do {
+            let editModel = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? ZLEditImageModel
+            return editModel
+        } catch (let error) {
+            debugPrint("encode error: \(error)")
+            let editModel = NSKeyedUnarchiver.unarchiveObject(with: data) as? ZLEditImageModel
+            return editModel
+        }
+    }
+    
     @objc func continueEditImage() {
         guard let oi = self.originalImage else {
             return
         }
-        self.editImage(oi, editModel: self.resultImageEditModel)
+        if let data = getData(from: resultImageEditModel!), let em = getEditModel(from: data) {
+            print("!!!")
+            print(em)
+            self.editImage(oi, editModel: em)
+        } else {
+            self.editImage(oi, editModel: self.resultImageEditModel)
+        }
+//        self.editImage(oi, editModel: self.resultImageEditModel)
     }
     
     func editImage(_ image: UIImage, editModel: ZLEditImageModel?) {

@@ -153,7 +153,7 @@ extension ZLImageEditorConfiguration {
 
 // MARK: Clip ratio.
 
-public class ZLImageClipRatio: NSObject {
+public class ZLImageClipRatio: NSObject, NSCoding {
     
     let title: String
     
@@ -162,6 +162,21 @@ public class ZLImageClipRatio: NSObject {
     @objc public init(title: String, whRatio: CGFloat) {
         self.title = title
         self.whRatio = whRatio
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case title
+        case whRatio
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(title, forKey: CodingKeys.title.rawValue)
+        coder.encode(whRatio, forKey: CodingKeys.whRatio.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        title = coder.decodeObject(forKey: CodingKeys.title.rawValue) as? String ?? ""
+        whRatio = coder.decodeObject(forKey: CodingKeys.whRatio.rawValue) as? CGFloat ?? 0
     }
     
 }

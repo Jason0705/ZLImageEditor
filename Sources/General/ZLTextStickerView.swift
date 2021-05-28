@@ -430,7 +430,7 @@ extension ZLTextStickerView: UIGestureRecognizerDelegate {
 }
 
 
-public class ZLTextStickerState: NSObject {
+public class ZLTextStickerState: NSObject, NSCoding {
     
     let text: String
     let textColor: UIColor
@@ -453,6 +453,73 @@ public class ZLTextStickerState: NSObject {
         self.gesRotation = gesRotation
         self.totalTranslationPoint = totalTranslationPoint
         super.init()
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case text
+        case textColor
+        case bgColor
+        case originScale
+        case originAngle
+        case originFrame
+        case gesScale
+        case gesRotation
+        case totalTranslationPoint
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(text, forKey: CodingKeys.text.rawValue)
+        coder.encode(textColor, forKey: CodingKeys.textColor.rawValue)
+        coder.encode(bgColor, forKey: CodingKeys.bgColor.rawValue)
+        coder.encode(originScale, forKey: CodingKeys.originScale.rawValue)
+        coder.encode(originAngle, forKey: CodingKeys.originAngle.rawValue)
+        let originFrameString = NSCoder.string(for: originFrame)
+        coder.encode(originFrameString, forKey: CodingKeys.originFrame.rawValue)
+        coder.encode(gesScale, forKey: CodingKeys.gesScale.rawValue)
+        coder.encode(gesRotation, forKey: CodingKeys.gesRotation.rawValue)
+        let totalTranslationPointString = NSCoder.string(for: totalTranslationPoint)
+        coder.encode(totalTranslationPointString, forKey: CodingKeys.totalTranslationPoint.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        text = coder.decodeObject(forKey: CodingKeys.text.rawValue) as? String ?? ""
+        textColor = coder.decodeObject(forKey: CodingKeys.textColor.rawValue) as? UIColor ?? UIColor.white
+        bgColor = coder.decodeObject(forKey: CodingKeys.bgColor.rawValue) as? UIColor ?? UIColor.white
+        originScale = coder.decodeObject(forKey: CodingKeys.originScale.rawValue) as? CGFloat ?? 0
+        originAngle = coder.decodeObject(forKey: CodingKeys.originAngle.rawValue) as? CGFloat ?? 0
+        let originFrameString = coder.decodeObject(forKey: CodingKeys.originFrame.rawValue) as? String ?? ""
+        originFrame = NSCoder.cgRect(for: originFrameString)
+        gesScale = coder.decodeObject(forKey: CodingKeys.gesScale.rawValue) as? CGFloat ?? 0
+        gesRotation = coder.decodeObject(forKey: CodingKeys.gesRotation.rawValue) as? CGFloat ?? 0
+        let totalTranslationPointString = coder.decodeObject(forKey: CodingKeys.totalTranslationPoint.rawValue) as? String ?? ""
+        totalTranslationPoint = NSCoder.cgPoint(for: totalTranslationPointString)
+    }
+    
+}
+
+public class ZLTextSticker: NSObject, NSCoding {
+    let state: ZLTextStickerState?
+    let index: Int
+    
+    init(state: ZLTextStickerState, index: Int) {
+        self.state = state
+        self.index = index
+        super.init()
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case state
+        case index
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(state, forKey: CodingKeys.state.rawValue)
+        coder.encode(index, forKey: CodingKeys.index.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        state = coder.decodeObject(forKey: CodingKeys.state.rawValue) as? ZLTextStickerState
+        index = coder.decodeObject(forKey: CodingKeys.index.rawValue) as? Int ?? 0
     }
     
 }

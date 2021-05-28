@@ -397,7 +397,7 @@ extension ZLImageStickerView: UIGestureRecognizerDelegate {
 }
 
 
-public class ZLImageStickerState: NSObject {
+public class ZLImageStickerState: NSObject, NSCoding {
     
     let image: UIImage
     let originScale: CGFloat
@@ -416,6 +416,66 @@ public class ZLImageStickerState: NSObject {
         self.gesRotation = gesRotation
         self.totalTranslationPoint = totalTranslationPoint
         super.init()
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case image
+        case originScale
+        case originAngle
+        case originFrame
+        case gesScale
+        case gesRotation
+        case totalTranslationPoint
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(image, forKey: CodingKeys.image.rawValue)
+        coder.encode(originScale, forKey: CodingKeys.originScale.rawValue)
+        coder.encode(originAngle, forKey: CodingKeys.originAngle.rawValue)
+        let originFrameString = NSCoder.string(for: originFrame)
+        coder.encode(originFrameString, forKey: CodingKeys.originFrame.rawValue)
+        coder.encode(gesScale, forKey: CodingKeys.gesScale.rawValue)
+        coder.encode(gesRotation, forKey: CodingKeys.gesRotation.rawValue)
+        let totalTranslationPointString = NSCoder.string(for: totalTranslationPoint)
+        coder.encode(totalTranslationPointString, forKey: CodingKeys.totalTranslationPoint.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        image = coder.decodeObject(forKey: CodingKeys.image.rawValue) as? UIImage ?? UIImage()
+        originScale = coder.decodeObject(forKey: CodingKeys.originScale.rawValue) as? CGFloat ?? 0
+        originAngle = coder.decodeObject(forKey: CodingKeys.originAngle.rawValue) as? CGFloat ?? 0
+        let originFrameString = coder.decodeObject(forKey: CodingKeys.originFrame.rawValue) as? String ?? ""
+        originFrame = NSCoder.cgRect(for: originFrameString)
+        gesScale = coder.decodeObject(forKey: CodingKeys.gesScale.rawValue) as? CGFloat ?? 0
+        gesRotation = coder.decodeObject(forKey: CodingKeys.gesRotation.rawValue) as? CGFloat ?? 0
+        let totalTranslationPointString = coder.decodeObject(forKey: CodingKeys.totalTranslationPoint.rawValue) as? String ?? ""
+        totalTranslationPoint = NSCoder.cgPoint(for: totalTranslationPointString)
+    }
+}
+
+public class ZLImageSticker: NSObject, NSCoding {
+    let state: ZLImageStickerState?
+    let index: Int
+    
+    init(state: ZLImageStickerState, index: Int) {
+        self.state = state
+        self.index = index
+        super.init()
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case state
+        case index
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(state, forKey: CodingKeys.state.rawValue)
+        coder.encode(index, forKey: CodingKeys.index.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        state = coder.decodeObject(forKey: CodingKeys.state.rawValue) as? ZLImageStickerState
+        index = coder.decodeObject(forKey: CodingKeys.index.rawValue) as? Int ?? 0
     }
     
 }

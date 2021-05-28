@@ -26,7 +26,7 @@
 
 import UIKit
 
-public class ZLEditImageModel: NSObject {
+public class ZLEditImageModel: NSObject, NSCoding {
     
     public let drawPaths: [ZLDrawPath]
     
@@ -40,11 +40,11 @@ public class ZLEditImageModel: NSObject {
     
     public let selectFilter: ZLFilter?
     
-    public let textStickers: [(state: ZLTextStickerState, index: Int)]?
+    public let textStickers: [ZLTextSticker]?
     
-    public let imageStickers: [(state: ZLImageStickerState, index: Int)]?
+    public let imageStickers: [ZLImageSticker]?
     
-    init(drawPaths: [ZLDrawPath], mosaicPaths: [ZLMosaicPath], editRect: CGRect?, angle: CGFloat, selectRatio: ZLImageClipRatio?, selectFilter: ZLFilter, textStickers: [(state: ZLTextStickerState, index: Int)]?, imageStickers: [(state: ZLImageStickerState, index: Int)]?) {
+    init(drawPaths: [ZLDrawPath], mosaicPaths: [ZLMosaicPath], editRect: CGRect?, angle: CGFloat, selectRatio: ZLImageClipRatio?, selectFilter: ZLFilter, textStickers: [ZLTextSticker]?, imageStickers: [ZLImageSticker]?) {
         self.drawPaths = drawPaths
         self.mosaicPaths = mosaicPaths
         self.editRect = editRect
@@ -56,7 +56,41 @@ public class ZLEditImageModel: NSObject {
         super.init()
     }
     
+    enum CodingKeys: String, CodingKey {
+        case drawPaths
+        case mosaicPaths
+        case editRect
+        case angle
+        case selectRatio
+        case selectFilter
+        case textStickers
+        case imageStickers
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(drawPaths, forKey: CodingKeys.drawPaths.rawValue)
+        coder.encode(mosaicPaths, forKey: CodingKeys.mosaicPaths.rawValue)
+        coder.encode(editRect, forKey: CodingKeys.editRect.rawValue)
+        coder.encode(angle, forKey: CodingKeys.angle.rawValue)
+        coder.encode(selectRatio, forKey: CodingKeys.selectRatio.rawValue)
+        coder.encode(selectFilter, forKey: CodingKeys.selectFilter.rawValue)
+        coder.encode(textStickers, forKey: CodingKeys.textStickers.rawValue)
+        coder.encode(imageStickers, forKey: CodingKeys.imageStickers.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        drawPaths = coder.decodeObject(forKey: CodingKeys.drawPaths.rawValue) as? [ZLDrawPath] ?? []
+        mosaicPaths = coder.decodeObject(forKey: CodingKeys.mosaicPaths.rawValue) as? [ZLMosaicPath] ?? []
+        editRect = coder.decodeObject(forKey: CodingKeys.editRect.rawValue) as? CGRect
+        angle = coder.decodeObject(forKey: CodingKeys.angle.rawValue) as? CGFloat ?? 0
+        selectRatio = coder.decodeObject(forKey: CodingKeys.selectRatio.rawValue) as? ZLImageClipRatio
+        selectFilter = coder.decodeObject(forKey: CodingKeys.selectFilter.rawValue) as? ZLFilter
+        textStickers = coder.decodeObject(forKey: CodingKeys.textStickers.rawValue) as? [ZLTextSticker]
+        imageStickers = coder.decodeObject(forKey: CodingKeys.imageStickers.rawValue) as? [ZLImageSticker]
+    }
+    
 }
+
 
 public class ZLEditImageViewController: UIViewController {
 
@@ -237,12 +271,16 @@ public class ZLEditImageViewController: UIViewController {
         
         var stickers: [UIView?] = Array(repeating: nil, count: teStic.count + imStic.count)
         teStic.forEach { (cache) in
-            let v = ZLTextStickerView(from: cache.state)
-            stickers[cache.index] = v
+            if let state = cache.state {
+                let v = ZLTextStickerView(from: state)
+                stickers[cache.index] = v
+            }
         }
         imStic.forEach { (cache) in
-            let v = ZLImageStickerView(from: cache.state)
-            stickers[cache.index] = v
+            if let state = cache.state {
+                let v = ZLImageStickerView(from: state)
+                stickers[cache.index] = v
+            }
         }
         
         self.stickers = stickers.compactMap { $0 }
@@ -730,13 +768,13 @@ public class ZLEditImageViewController: UIViewController {
     }
     
     @objc func doneBtnClick() {
-        var textStickers: [(ZLTextStickerState, Int)] = []
-        var imageStickers: [(ZLImageStickerState, Int)] = []
+        var textStickers: [ZLTextSticker] = []
+        var imageStickers: [ZLImageSticker] = []
         for (index, view) in self.stickersContainer.subviews.enumerated() {
             if let ts = view as? ZLTextStickerView, let _ = ts.label.text {
-                textStickers.append((ts.state, index))
+                textStickers.append(ZLTextSticker(state: ts.state, index: index))
             } else if let ts = view as? ZLImageStickerView {
-                imageStickers.append((ts.state, index))
+                imageStickers.append(ZLImageSticker(state: ts.state, index: index))
             }
         }
         
@@ -1456,7 +1494,7 @@ class ZLFilterImageCell: UICollectionViewCell {
 
 // MARK: Draw path
 
-public class ZLDrawPath: NSObject {
+public class ZLDrawPath: NSObject, NSCoding {
     
     let pathColor: UIColor
     
@@ -1497,12 +1535,33 @@ public class ZLDrawPath: NSObject {
         self.path.stroke()
     }
     
+    enum CodingKeys: String, CodingKey {
+        case pathColor
+        case path
+        case ratio
+        case shapeLayer
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(pathColor, forKey: CodingKeys.pathColor.rawValue)
+        coder.encode(path, forKey: CodingKeys.path.rawValue)
+        coder.encode(ratio, forKey: CodingKeys.ratio.rawValue)
+        coder.encode(shapeLayer, forKey: CodingKeys.shapeLayer.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        pathColor = coder.decodeObject(forKey: CodingKeys.pathColor.rawValue) as? UIColor ?? UIColor.white
+        path = coder.decodeObject(forKey: CodingKeys.path.rawValue) as? UIBezierPath ?? UIBezierPath()
+        ratio = coder.decodeObject(forKey: CodingKeys.ratio.rawValue) as? CGFloat ?? 0
+        shapeLayer = coder.decodeObject(forKey: CodingKeys.shapeLayer.rawValue) as? CAShapeLayer ?? CAShapeLayer()
+    }
+    
 }
 
 
 // MARK: Mosaic path
 
-public class ZLMosaicPath: NSObject {
+public class ZLMosaicPath: NSObject, NSCoding {
     
     let path: UIBezierPath
     
@@ -1528,6 +1587,29 @@ public class ZLMosaicPath: NSObject {
     func addLine(to point: CGPoint) {
         self.path.addLine(to: point)
         self.linePoints.append(CGPoint(x: point.x / self.ratio, y: point.y / self.ratio))
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case path
+        case ratio
+        case startPoint
+        case linePoints
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(path, forKey: CodingKeys.path.rawValue)
+        coder.encode(ratio, forKey: CodingKeys.ratio.rawValue)
+        let startPointString = NSCoder.string(for: startPoint)
+        coder.encode(startPointString, forKey: CodingKeys.startPoint.rawValue)
+        coder.encode(linePoints, forKey: CodingKeys.linePoints.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        path = coder.decodeObject(forKey: CodingKeys.path.rawValue) as? UIBezierPath ?? UIBezierPath()
+        ratio = coder.decodeObject(forKey: CodingKeys.ratio.rawValue) as? CGFloat ?? 0
+        let startPointString = coder.decodeObject(forKey: CodingKeys.startPoint.rawValue) as? String ?? ""
+        startPoint = NSCoder.cgPoint(for: startPointString)
+        linePoints = coder.decodeObject(forKey: CodingKeys.linePoints.rawValue) as? [CGPoint] ?? []
     }
     
 }

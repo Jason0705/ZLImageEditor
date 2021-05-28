@@ -30,7 +30,7 @@ import UIKit
 
 public typealias ZLFilterApplierType = ((_ image: UIImage) -> UIImage)
 
-@objc public enum ZLFilterType: Int {
+@objc public enum ZLFilterType: Int, Codable {
     case normal
     case chrome
     case fade
@@ -74,7 +74,7 @@ public typealias ZLFilterApplierType = ((_ image: UIImage) -> UIImage)
     }
 }
 
-public class ZLFilter: NSObject {
+public class ZLFilter: NSObject, NSCoding {
     
     let name: String
     
@@ -105,6 +105,21 @@ public class ZLFilter: NSObject {
     @objc public init(name: String, applier: ZLFilterApplierType?) {
         self.name = name
         self.applier = applier
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case applier
+    }
+    
+    public func encode(with coder: NSCoder) {
+        coder.encode(name, forKey: CodingKeys.name.rawValue)
+        coder.encode(applier, forKey: CodingKeys.applier.rawValue)
+    }
+
+    public required init?(coder: NSCoder) {
+        name = coder.decodeObject(forKey: CodingKeys.name.rawValue) as? String ?? ""
+        applier = coder.decodeObject(forKey: CodingKeys.applier.rawValue) as? ZLFilterApplierType
     }
     
 }
