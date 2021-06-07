@@ -403,8 +403,8 @@ public class ZLEditImageViewController: UIViewController {
         }
         
         self.originalFrame = self.view.convert(self.containerView.frame, from: self.scrollView)
-        self.isScrolling = false
         self.scrollView.setZoomScale(1, animated: true)
+        self.isScrolling = false
     }
     
     func setUpConstraints() {
