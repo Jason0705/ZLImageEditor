@@ -278,8 +278,6 @@ class ViewController: UIViewController {
             return
         }
         if let data = getData(from: resultImageEditModel!), let em = getEditModel(from: data) {
-            print("!!!")
-            print(em)
             self.editImage(oi, editModel: em)
         } else {
             self.editImage(oi, editModel: self.resultImageEditModel)

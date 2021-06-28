@@ -34,6 +34,8 @@ public class ZLEditImageModel: NSObject, NSCoding {
     
     public let editRect: CGRect?
     
+    public let originalStickersContainerSize: CGSize?
+    
     public let angle: CGFloat
     
     public let selectRatio: ZLImageClipRatio?
@@ -44,10 +46,11 @@ public class ZLEditImageModel: NSObject, NSCoding {
     
     public let imageStickers: [ZLImageSticker]?
     
-    init(drawPaths: [ZLDrawPath], mosaicPaths: [ZLMosaicPath], editRect: CGRect?, angle: CGFloat, selectRatio: ZLImageClipRatio?, selectFilter: ZLFilter, textStickers: [ZLTextSticker]?, imageStickers: [ZLImageSticker]?) {
+    init(drawPaths: [ZLDrawPath], mosaicPaths: [ZLMosaicPath], editRect: CGRect?, originalStickersContainerSize: CGSize?, angle: CGFloat, selectRatio: ZLImageClipRatio?, selectFilter: ZLFilter, textStickers: [ZLTextSticker]?, imageStickers: [ZLImageSticker]?) {
         self.drawPaths = drawPaths
         self.mosaicPaths = mosaicPaths
         self.editRect = editRect
+        self.originalStickersContainerSize = originalStickersContainerSize
         self.angle = angle
         self.selectRatio = selectRatio
         self.selectFilter = selectFilter
@@ -60,6 +63,7 @@ public class ZLEditImageModel: NSObject, NSCoding {
         case drawPaths
         case mosaicPaths
         case editRect
+        case originalStickersContainerSize
         case angle
         case selectRatio
         case selectFilter
@@ -71,6 +75,7 @@ public class ZLEditImageModel: NSObject, NSCoding {
         coder.encode(drawPaths, forKey: CodingKeys.drawPaths.rawValue)
         coder.encode(mosaicPaths, forKey: CodingKeys.mosaicPaths.rawValue)
         coder.encode(editRect, forKey: CodingKeys.editRect.rawValue)
+        coder.encode(originalStickersContainerSize, forKey: CodingKeys.originalStickersContainerSize.rawValue)
         coder.encode(angle, forKey: CodingKeys.angle.rawValue)
         coder.encode(selectRatio, forKey: CodingKeys.selectRatio.rawValue)
         coder.encode(selectFilter, forKey: CodingKeys.selectFilter.rawValue)
@@ -82,6 +87,7 @@ public class ZLEditImageModel: NSObject, NSCoding {
         drawPaths = coder.decodeObject(forKey: CodingKeys.drawPaths.rawValue) as? [ZLDrawPath] ?? []
         mosaicPaths = coder.decodeObject(forKey: CodingKeys.mosaicPaths.rawValue) as? [ZLMosaicPath] ?? []
         editRect = coder.decodeObject(forKey: CodingKeys.editRect.rawValue) as? CGRect
+        originalStickersContainerSize = coder.decodeObject(forKey: CodingKeys.originalStickersContainerSize.rawValue) as? CGSize
         angle = coder.decodeObject(forKey: CodingKeys.angle.rawValue) as? CGFloat ?? 0
         selectRatio = coder.decodeObject(forKey: CodingKeys.selectRatio.rawValue) as? ZLImageClipRatio
         selectFilter = coder.decodeObject(forKey: CodingKeys.selectFilter.rawValue) as? ZLFilter
@@ -200,6 +206,8 @@ public class ZLEditImageViewController: UIViewController {
         return self.originalImage.size
     }
     
+    var originalStickersContainerSize: CGSize?
+    
     private var lastOrientation = UIApplication.shared.statusBarOrientation
     
     @objc public var editFinishBlock: ( (UIImage, ZLEditImageModel) -> Void )?
@@ -222,7 +230,7 @@ public class ZLEditImageViewController: UIViewController {
         if ZLImageEditorConfiguration.default().showClipDirectlyIfOnlyHasClipTool, tools.count == 1, tools.contains(.clip) {
             let vc = ZLClipImageViewController(image: image, editRect: editModel?.editRect, angle: editModel?.angle ?? 0, selectRatio: editModel?.selectRatio)
             vc.clipDoneBlock = { (angle, editRect, ratio) in
-                let m = ZLEditImageModel(drawPaths: [], mosaicPaths: [], editRect: editRect, angle: angle, selectRatio: ratio, selectFilter: .normal, textStickers: nil, imageStickers: nil)
+                let m = ZLEditImageModel(drawPaths: [], mosaicPaths: [], editRect: editRect, originalStickersContainerSize: nil, angle: angle, selectRatio: ratio, selectFilter: .normal, textStickers: nil, imageStickers: nil)
                 completion?(image.clipImage(angle, editRect) ?? image, m)
             }
             vc.animateDismiss = animate
@@ -253,6 +261,7 @@ public class ZLEditImageViewController: UIViewController {
         self.mosaicPaths = editModel?.mosaicPaths ?? []
         self.angle = editModel?.angle ?? 0
         self.selectRatio = editModel?.selectRatio
+        self.originalStickersContainerSize = editModel?.originalStickersContainerSize
         
         var ts = ZLImageEditorConfiguration.default().editImageTools
         if ts.contains(.imageSticker), ZLImageEditorConfiguration.default().imageStickerContainerView == nil {
@@ -316,6 +325,11 @@ public class ZLEditImageViewController: UIViewController {
         if shouldLayout {
             
             self.resetContainerViewFrame()
+            if let originalSize = self.originalStickersContainerSize {
+                DispatchQueue.main.async {
+                    self.reScaleStickersFrame(oldContainerSize: originalSize)
+                }
+            }
             
             if !self.drawPaths.isEmpty {
                 self.drawLine()
@@ -780,7 +794,8 @@ public class ZLEditImageViewController: UIViewController {
         
         var image = self.buildImage()
         image = image.clipImage(self.angle, self.editRect) ?? image
-        self.editFinishBlock?(image, ZLEditImageModel(drawPaths: self.drawPaths, mosaicPaths: self.mosaicPaths, editRect: self.editRect, angle: self.angle, selectRatio: self.selectRatio, selectFilter: self.currentFilter, textStickers: textStickers, imageStickers: imageStickers))
+        self.originalStickersContainerSize = self.stickersContainer.frame.size
+        self.editFinishBlock?(image, ZLEditImageModel(drawPaths: self.drawPaths, mosaicPaths: self.mosaicPaths, editRect: self.editRect, originalStickersContainerSize: self.originalStickersContainerSize, angle: self.angle, selectRatio: self.selectRatio, selectFilter: self.currentFilter, textStickers: textStickers, imageStickers: imageStickers))
         self.dismiss(animated: self.animateDismiss, completion: nil)
     }
     
