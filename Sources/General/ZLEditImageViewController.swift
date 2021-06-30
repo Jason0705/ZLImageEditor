@@ -437,8 +437,8 @@ public class ZLEditImageViewController: UIViewController {
         self.cancelBtn.translatesAutoresizingMaskIntoConstraints = false
         self.cancelBtn.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor, constant: 10).isActive = true
         self.cancelBtn.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor).isActive = true
-        self.cancelBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
-        self.cancelBtn.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        self.cancelBtn.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        self.cancelBtn.heightAnchor.constraint(equalToConstant: 25).isActive = true
         
         self.bottomShadowView.translatesAutoresizingMaskIntoConstraints = false
         self.bottomShadowView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
@@ -527,7 +527,7 @@ public class ZLEditImageViewController: UIViewController {
         self.topShadowView.layer.addSublayer(self.topShadowLayer)
         
         self.cancelBtn = UIButton(type: .custom)
-        self.cancelBtn.setImage(getImage("zl_retake"), for: .normal)
+        self.cancelBtn.setImage(getImage("zl_close"), for: .normal)
         self.cancelBtn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
         self.cancelBtn.adjustsImageWhenHighlighted = false
         self.cancelBtn.zl_enlargeValidTouchArea(inset: 30)
